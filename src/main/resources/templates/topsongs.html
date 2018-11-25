@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spring Boot Thymeleaf + Spring Security</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+
+</head>
+<body>
+
+<div class="mycontainer">
+<div th:replace="fragments/header :: header"/>
+<div class="container clearfix">
+
+    <div class="starter-template">
+        <h1>Top Songs in <span th:text="${country}"></span> </h1>
+
+        <div th:if="${(listOfTop500Songs == null)}">
+            <h2>Oops!! No top songs for this country </h2>
+        </div>
+
+        <div class="card-columns"  style="column-count: 5;">
+            <div class="card" th:each="song : ${listOfTop500Songs}" th:if="listOfTop500Songs != null">
+                <a th:href="'/song/' + ${song.getMbId()}">  <img class="card-img-top" th:src="${song.getImageUrl()}" alt="Card image cap" style="height:100%;width:100%"></a>
+                <div class="card-body">
+                    <h5 class="card-title"><a th:href="'/song/' + ${song.getMbId()}" th:text="${song.getName()}"></a></h5>
+                    <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<div th:replace="fragments/footer :: footer"/>
+</body>
+</html>

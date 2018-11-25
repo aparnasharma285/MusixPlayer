@@ -1,0 +1,352 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <div th:replace="fragments/header :: header-css"/>
+    <link rel='stylesheet prefetch' href='https://cdn.plyr.io/2.0.7/plyr.css'>
+    <style>
+        .plyr {
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .col-centered {
+            float: none;
+            margin: 0 auto;
+        }
+    </style>
+    <!-- for ratings -->
+    <script src="/js/jquery.combostars.js"></script>
+
+
+</head>
+<body>
+
+<div class="mycontainer">
+
+    <div th:replace="fragments/header :: header"/>
+
+    <div class="container">
+
+        <h1><span th:text="${songName}"></span></h1>
+        <br/>
+        <div class="row">
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <img th:src="${songImageUrl}" style="max-height: 100%; max-width: 100%"/>
+                        <div class="row mx-auto">
+                            <div class="col-12 mx-auto" th:if="${songYoutubeLink} != null">
+                                <div class="hide">
+                                    <div data-type="youtube" th:data-video-id="${songYoutubeLink}"></div>
+                                </div>
+                                <div class="actions" style="margin-top: 10px">
+                                    <div style="margin: 0 auto;max-width: 205px;">
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary js-play">
+                                                <input type="radio" name="options" id="option2" autocomplete="off"> Play
+                                            </label>
+                                            <label class="btn btn-outline-primary js-pause">
+                                                <input type="radio" name="options" id="option3" autocomplete="off">
+                                                Pause
+                                            </label>
+                                            <label class="btn btn-outline-primary active js-stop">
+                                                <input type="radio" name="options" id="option1" autocomplete="off"
+                                                       checked> Stop
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin: 0 auto;max-width: 115px;">
+                                        <div class="btn-group" role="group" aria-label="Player Control">
+                                            <button type="button" class="btn btn-outline-info btn-sm js-rewind">Rewind
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-sm js-forward">Forward
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin: 0 auto;max-width: 300px; margin-top: 20px;"
+                                         sec:authorize="isAuthenticated()">
+                                        <hr>
+
+
+                                        <form th:action="'/profile/'+${mxuser.getUsername()}+'/playlist/addsong'"
+                                              method="POST" th:if="${ #lists.size(mxuser.getPlaylists()) &gt; 0}">
+
+
+                                            <div class="form-group">
+                                                <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                                <label for="playlist">Add Song to Existing Playlist</label>
+                                                <div class="input-group mb-3">
+                                                    <select class="form-control" id="playlist" name="playlistid">
+                                                        <option disabled>Select a Playlist</option>
+                                                        <option th:each="playlist : ${mxuser.getPlaylists()}"
+                                                                th:value="${playlist.getId()}"
+                                                                th:text="${playlist.getName()}"/>
+                                                    </select>
+                                                    <button type="submit" class="btn btn-outline-info"
+                                                            style="margin: 0 auto;max-width: 150px; margin-left: 10px;">
+                                                        Add
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        <hr>
+                                        <div><a th:href="'/profile/'+${mxuser.getUsername()}+'/playlist/create'"
+                                                class="btn btn-outline-info " style="float: left;">Create Playlist</a>
+                                            <form action="/song/delete" method="POST" sec:authorize="isAuthenticated()"
+                                                  th:if="${mxuser.getRole().getName()}=='ADMIN'  or ${mxuser.getRole().getName()}=='EDITOR' or ${mxuserIsOwner}==true">
+                                                <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                                <button type="submit" class="btn btn-danger"
+                                                        style="float: left; margin-left: 5px;">
+                                                    Delete Song
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-8">
+                <h4>Details</h4>
+                <br>
+                <b> Artist:
+                    <span th:each="artistData : ${listOfArtists}" th:if="listOfArtists != null">
+                        <a th:href="'/artist/' + ${artistData.getMbid()}">
+                            <span th:text="${artistData.getName()}"></span></a>
+                    </span>
+                </b>
+                <br/>
+
+                <b>Duration: <span
+                        th:text="${songMinuteDuration}+' minutes '+ ${songSecondsDuration}+ ' seconds'"></span></b>
+                <br/>
+
+                <b>Views: <span th:text="${songViews}"></span></b>
+                <br/>
+
+
+                <b>Description:</b> <span th:utext="${songDescription}"></span>
+                <br/>
+
+                <b>Youtube Link:</b> <a th:href="'https://www.youtube.com/watch?v='+${songYoutubeLink}"
+                                        th:text="'https://www.youtube.com/watch?v='+${songYoutubeLink}"
+                                        target="_blank"></a>
+                <br/>
+
+                <div th:if="songLyrics != null">
+                    <br>
+
+                    <h4>Lyrics</h4>
+                    <span th:each="lyrics : ${songLyrics}" th:if="songLyrics != null">
+                            <p data-th-utext="${#strings.replace(lyrics.getLyrics(), newLineChar, '&lt;br /&gt;')}"></p>
+
+                        <b> Lyrics Courtesy: <span th:text="${lyrics.getSource()}"></span> </b>
+                    </span>
+                    <br/>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top: 100px">
+        <div class="row">
+            <div class="col-12" style="max-width: 700px;">
+
+                <h4>Song Reviews</h4>
+                <form action="/review/add" method="POST">
+                    <fieldset>
+                        <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                        <div class="form-group">
+                            <label for="exampleTextarea">Enter your Review: </label>
+                            <textarea class="form-control" id="exampleTextarea" rows="3"
+                                      name="reviewtext"></textarea>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Rate:</label>
+                            <div style="margin-top: 10px">
+                                <select class="combostar" name="ratings">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </fieldset>
+                </form>
+
+                <br/><br/>
+                <div th:if="songReviews != null">
+                    <div class="card" th:each="review : ${songReviews}">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-3">
+                                        <a th:href="'/profile/'+${review.getReviewer().getUsername()}+'/'"><img
+                                                title="profile image" class="img-circle img-responsive"
+                                                th:src="'https://www.gravatar.com/avatar/'+${review.getReviewer().getEmailHash()}+'?s=48&d=robohash'"
+                                                style="border-radius: 50%"></a>
+
+                                        <h6 class="card-title mb-2 text-muted text-capitalize col-centered"
+                                        ><a th:href="'/profile/'+${review.getReviewer().getUsername()}+'/'"
+                                            th:text="${review.getReviewer().getUsername()} + '  '"></a></h6>
+                                        <form action="/review/flag" method="POST">
+                                            <input type="hidden" th:value="${review.getId()}" name="reviewid"/>
+                                            <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                            <button type="submit" class="btn btn-danger btn-sm">Flag</button>
+                                        </form>
+
+                                    </div>
+
+                                    <div class="col-8">
+                                        <p class="card-text reviewprintedtext" th:text="${review.getReview()}"></p>
+                                        <p class="card-text reviewprintedtext"
+                                           th:text="'Rating: '+${review.getRating()}"></p>
+                                        <p class="alert alert-dismissible alert-warning"
+                                           th:if="${review.getFlagged()}==true">This Review is Flagged!</p>
+                                        <div class="row" sec:authorize="isAuthenticated()">
+
+                                            <form action="/review/delete" method="POST" class="deletereview" th:if="${review.getReviewer().getUsername()}==${#authentication.name} or ${mxuser.getRole().getName()}=='ADMIN'  or ${mxuser.getRole().getName()}=='EDITOR'">
+                                                <input type="hidden" th:value="${review.getId()}" name="reviewid"/>
+                                                <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                                <button type="submit" class="btn btn-danger btn-sm"  style="margin-left:10px;">Delete</button>
+                                            </form>
+
+                                            <form action="/review/likeunlike" method="POST" class="likereview">
+                                                <input type="hidden" th:value="${review.getId()}" name="reviewid"/>
+                                                <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                                <input type="hidden" th:value="${#authentication.name}"
+                                                       name="username"/>
+                                                <button th:if="${#lists.contains(review.getLikedBy(),mxuser)}" type="submit"
+                                                        class="btn btn-danger btn-sm"  style="margin-left:10px;">Unlike</button>
+                                                <button th:if="${not #lists.contains(review.getLikedBy(),mxuser)}"
+                                                        type="submit"
+                                                        class="btn btn-danger btn-sm" style="margin-left:10px;">Like</button>
+                                            </form>
+
+
+                                            <form action="/review/edit" method="POST" class="editform" th:if="${review.getReviewer().getUsername()}==${#authentication.name} or ${mxuser.getRole().getName()}=='ADMIN'  or ${mxuser.getRole().getName()}=='EDITOR'">
+                                                <textarea class="form-control" rows="3" name="reviewtext"
+                                                          th:text="${review.getReview()}"></textarea>
+                                                <div class="form-group row">
+                                                    <div style="margin-left: 20px">
+                                                        <select class="combostar" name="ratings">
+                                                            <option value="1">1</option>
+                                                            <option value="2">2</option>
+                                                            <option value="3" selected>3</option>
+                                                            <option value="4">4</option>
+                                                            <option value="5">5</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" th:value="${review.getId()}" name="reviewid"/>
+                                                <input type="hidden" th:value="${songMbid}" name="mbid"/>
+                                                <button type="submit" class="btn btn-danger btn-sm"  style="margin-left:10px;">Edit</button>
+                                            </form>
+                                            <button class="btn btn-danger btn-sm editbutton"  style="margin-left:10px;"  th:if="${review.getReviewer().getUsername()}==${#authentication.name} or ${mxuser.getRole().getName()}=='ADMIN'  or ${mxuser.getRole().getName()}=='EDITOR'">Edit</button>
+
+
+
+                                        </div>
+
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+</div>
+<!-- /.container -->
+<div th:replace="fragments/footer :: footer"/>
+<script>
+    $(document).ready(function () {
+        $('.combostar').combostars();
+        $('.editform').toggle();
+        $('.editbutton').on('click', function () {
+            $(this).siblings('.editform').toggle();
+            $(this).toggle();
+            $(this).parent().siblings('.reviewprintedtext').toggle();
+            $(this).siblings('.deletereview').toggle();
+            $(this).siblings('.likereview').toggle();
+        })
+    });
+</script>
+
+<script src='https://cdn.plyr.io/2.0.7/plyr.js'></script>
+<script>
+    (function () {
+        // This is the bare minimum JavaScript. You can opt to pass no arguments to setup.
+        // e.g. just plyr.setup(); and leave it at that if you have no need for events
+        var instances = plyr.setup({
+            // Output to console
+            debug: true
+        });
+
+        // Get an element
+        function get(selector) {
+            return document.querySelector(selector);
+        }
+
+        // Custom event handler (just for demo)
+        function on(element, type, callback) {
+            if (!(element instanceof HTMLElement)) {
+                element = get(element);
+            }
+            element.addEventListener(type, callback, false);
+        }
+
+        // Loop through each instance
+        instances.forEach(function (instance) {
+            // Play
+            on('.js-play', 'click', function () {
+                instance.play();
+            });
+
+            // Pause
+            on('.js-pause', 'click', function () {
+                instance.pause();
+            });
+
+            // Stop
+            on('.js-stop', 'click', function () {
+                instance.stop();
+            });
+
+            // Rewind
+            on('.js-rewind', 'click', function () {
+                instance.rewind();
+            });
+
+            // Forward
+            on('.js-forward', 'click', function () {
+                instance.forward();
+            });
+        });
+    })();
+</script>
+</body>
+</html>
