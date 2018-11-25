@@ -1,7 +1,7 @@
 # MusixPlayer.com
 MusixPlayer is official repository of MusixPlayer.com which is a project for CS5200 (Northeastern University)
 
-[Installation/Configuration](https://github.com/iatpatelishan/cs5200-spring-2018-musixplayer/wiki/Installation-And-Configuration) 
+[Installation/Configuration](https://github.com/aparnasharma285/MusixPlayer/wiki/Installation) 
 
 
 
